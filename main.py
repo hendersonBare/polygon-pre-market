@@ -36,7 +36,7 @@ print(datetime.datetime.fromtimestamp(1686907800000 / 1000))
 for x in results:
     print (x['h']) """
 
-isValidTicker("BRK.AWKND")
+isValidTicker("BRK.AWKND") ##test case for more "obscure" tickers
 
 for y in range(0, len(config.tickers)):
     isValidTicker(config.tickers[y])
