@@ -17,6 +17,6 @@ def DateToMilliseconds(humanReadableDate):
     closeTimeObj = datetime.strptime(humanReadableDate + " 7:30:00", '%Y-%m-%d %H:%M:%S')
     closeTimeMillisec = int(closeTimeObj.timestamp() * 1000)
 
-    return openTimeMillisec, closeTimeMillisec
+    return openTimeMillisec  + 86400000, closeTimeMillisec + 86400000
 
-print(DateToMilliseconds("2021-7-30")[0])
+print(DateToMilliseconds("2021-7-30"))
