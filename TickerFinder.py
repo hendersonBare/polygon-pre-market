@@ -3,22 +3,26 @@
 
 #NOTE: Polygon API calls only return data for stocks listed on US stock exchanges.
 
-import requests, config
+import requests, config, TimeConversion, datetime
 
 def isValidTicker(ticker):
-    openResponse = requests.get('https://api.polygon.io/v1/open-close/' + ticker + '/2021-07-29?adjusted=true&apiKey=' + config.API_KEY)
+    date = "2021-08-02"
+    PreMarketTimes = TimeConversion.DateToMilliseconds(date)
+    
+    openResponse = requests.get('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
+                                '?adjusted=true&apiKey=' + config.API_KEY)
 
     openResponseJSON = openResponse.json()
     """TODO: Error handling. Possible error cases:
        1.) Stock is listed on an exchange outside of the US
-       2.) The stock ticker has changed """
+       2.) !! The stock ticker has changed """
     try:
         open = openResponseJSON['open']
     except:
         print("an error occured trying to find the open price")
     #API call that returns all premarket data in the form of one minute candles for a certain ticker
     response = requests.get('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
-                        '/1627632000000/1627651800000?adjusted=true&sort=asc&limit=5000&apiKey=' + config.API_KEY) 
+                        '/' + str(PreMarketTimes[0])+ '/' + str(PreMarketTimes[1]) +'?adjusted=true&sort=asc&limit=5000&apiKey=' + config.API_KEY) 
     data = response.json()
     #TODO: need error handling for when the ticker yeilds no data or response
     try:
