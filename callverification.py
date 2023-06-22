@@ -9,13 +9,13 @@ data = response.json() # converts the HTTP response into a JSON object
 
 results = data['results'] # creates a list of the 'results' in this JSON object to ignore unneeded info
 
-for x in results:
-    print(datetime.datetime.fromtimestamp(x['t'] / 1000))
+"""for x in results:
+    print(datetime.datetime.fromtimestamp(x['t'] / 1000))"""
 
 print('\n')
-print(datetime.datetime.fromtimestamp(1627610400000 / 1000))
+print(datetime.datetime.fromtimestamp(1627632000000 / 1000))
 
-print(datetime.datetime.fromtimestamp(1686907800000 / 1000))
+print(datetime.datetime.fromtimestamp(1627651800000 / 1000))
 
 """for x in results:
     print (x['h'])"""
