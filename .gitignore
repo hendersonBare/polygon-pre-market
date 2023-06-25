@@ -162,3 +162,4 @@ cython_debug/
 config.py
 env
 _pycache_
+project_notes
