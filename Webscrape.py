@@ -7,7 +7,7 @@ used sparingly since there are a wide range of errors that can arrise from relyi
 web scraping
 """
 
-import selenium, config, bs4
+import selenium, config, bs4, requests
 from selenium import webdriver
 from bs4 import BeautifulSoup
 
@@ -42,4 +42,24 @@ ticker_elements = soup.find_all('td', {'class': ''})
 ticker_symbols = [element.text for element in ticker_elements if element.text.isalpha()]
 
 
-print(html_content);
+#print(html_content);
+
+def get_stock_list(page_number):
+  url = "https://www.nasdaq.com/market-activity/stocks/screener"
+  params = {"page": page_number}
+  response = requests.get(url, params=params)
+  soup = BeautifulSoup(response.content, "html.parser")
+  stock_list = []
+  for stock in soup.find_all("tr", class_="table-row"):
+    symbol = stock.find("td", class_="symbol").text
+    name = stock.find("td", class_="name").text
+    stock_list.append((symbol, name))
+  return stock_list
+
+def main():
+  for page_number in range(1, 10):
+    stock_list = get_stock_list(page_number)
+    for symbol, name in stock_list:
+      print(symbol, name)
+
+main()
