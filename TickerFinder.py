@@ -31,8 +31,7 @@ def isValidTicker(ticker):
     except:
         print("an error occured trying to get premarket candles")
     aggregates = data['results'] #the list of candles 
-    #open = aggregates[000]['o'] 
-    threshold = open * 1.2
+    threshold = ((open * 100 * 12) / 1000) #multiplies the open price by 1.2, prevents floating point errors
     for r in aggregates:
         if r['h'] > threshold:
             print(ticker)
