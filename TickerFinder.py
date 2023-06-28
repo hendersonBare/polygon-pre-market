@@ -6,20 +6,21 @@
 import requests, config, TimeConversion, datetime
 
 def isValidTicker(ticker):
-    date = "2021-08-02"
+    date = "2023-04-02"
     PreMarketTimes = TimeConversion.DateToMilliseconds(date)
 
     URL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
-                                '?adjusted=true&apiKey=' + config.API_KEY) #URL of the API request
+                                '?adjusted=true&apiKey=' + config.API_KEY) #URL of the git API request
     
-    openResponse = requests.get(URL)
+    closeResponse = requests.get(URL)
 
-    openResponseJSON = openResponse.json()
+    closeResponseJSON = closeResponse.json()
     """TODO: Error handling. Possible error cases:
        2.) !! The stock ticker has changed """
     try:
-        open = openResponseJSON['open']
+        close = closeResponseJSON['close']
     except:
+        return
         print("an error occured trying to find the open price")
     #API call that returns all premarket data in the form of one minute candles for a certain ticker
     response = requests.get('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
@@ -32,7 +33,11 @@ def isValidTicker(ticker):
     except:
         print("an error occured trying to get premarket candles")
     aggregates = data['results'] #the list of candles 
-    threshold = ((open * 100 * 12) / 1000) #multiplies the open price by 1.2, prevents floating point errors
+    try:
+        threshold = ((close * 100 * 12) / 1000) #multiplies the open price by 1.2, prevents floating point errors
+    except UnboundLocalError:
+        print("debug UnboundLocalError")
+        return
     for r in aggregates:
         if r['h'] > threshold:
             print(ticker)
