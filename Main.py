@@ -1,5 +1,7 @@
-import TickerFinder, config
+import TickerFinder, config, Webscrape
 
-for y in range(0, len(config.ConfirmationList)):
-    TickerFinder.isValidTicker(config.ConfirmationList[y])
+NASDAQ_Tickers = Webscrape.main()
+
+for y in range(0, len(NASDAQ_Tickers)):
+    TickerFinder.isValidTicker(NASDAQ_Tickers[y])
 
