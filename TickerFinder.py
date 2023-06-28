@@ -8,13 +8,14 @@ import requests, config, TimeConversion, datetime
 def isValidTicker(ticker):
     date = "2021-08-02"
     PreMarketTimes = TimeConversion.DateToMilliseconds(date)
+
+    URL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
+                                '?adjusted=true&apiKey=' + config.API_KEY) #URL of the API request
     
-    openResponse = requests.get('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
-                                '?adjusted=true&apiKey=' + config.API_KEY)
+    openResponse = requests.get(URL)
 
     openResponseJSON = openResponse.json()
     """TODO: Error handling. Possible error cases:
-       1.) Stock is listed on an exchange outside of the US
        2.) !! The stock ticker has changed """
     try:
         open = openResponseJSON['open']
