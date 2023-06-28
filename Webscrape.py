@@ -31,6 +31,10 @@ Options.add_argument('--disable-dev-shm-usage')
 Options.add_argument('--no-sandbox')
 driver = webdriver.Firefox(options=Options)
 
+file_path = 'NASDAQ_screener_tickers.txt'
+
+file = open(file_path, "w")
+
 def get_stock_list(page_number):
   url = "https://finviz.com/screener.ashx?v=111&f=exch_nasd&r=%s" % page_number #page_number used to iterate through pages
   driver.get(url)
@@ -46,6 +50,8 @@ def get_stock_list(page_number):
       stock_list.append((tickers)) #adds tickers to our list of stocks
   return stock_list
 
+
+
 #TODO: replace print statements with logging
 def main():
   config.WebscrapeOutput.clear
@@ -56,11 +62,15 @@ def main():
       for indivstock in nestedList:
         config.WebscrapeOutput.append(indivstock)
         stocks.append(indivstock)
+        file.writelines(indivstock + '\n')
     print(len(stocks)) #prints lengths of the list to ensure data is being added properly
     #for symbol in stock_list:
       #print(symbol)
   print(len(config.WebscrapeOutput))
+  file.close()
   return stocks
+
+
 
 """splits the comment that contains ticker data for each page
 into lines, then extracts the tickers from the comment
