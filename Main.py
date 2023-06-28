@@ -1,6 +1,11 @@
-import TickerFinder, config, Webscrape
+import TickerFinder, config
+file = open('NASDAQ_screener_tickers.txt', "r")
 
-NASDAQ_Tickers = Webscrape.main()
+lines = file.readlines()
+
+NASDAQ_Tickers = [line.strip() for line in lines]
+
+file.close()
 
 for y in range(0, len(NASDAQ_Tickers)):
     TickerFinder.isValidTicker(NASDAQ_Tickers[y])
