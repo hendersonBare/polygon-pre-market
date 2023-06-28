@@ -163,3 +163,4 @@ config.py
 env
 _pycache_
 project_notes
+NASDAQ_screener_tickers.txt
