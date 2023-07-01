@@ -18,5 +18,3 @@ def DateToMilliseconds(humanReadableDate):
     closeTimeMillisec = int(closeTimeObj.timestamp() * 1000)
 
     return openTimeMillisec  + 86400000, closeTimeMillisec + 86400000
-
-print(DateToMilliseconds("2021-7-30"))
