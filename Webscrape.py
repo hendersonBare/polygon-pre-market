@@ -6,7 +6,7 @@ extracting ticker that are apart of a certain index using reputable websites. On
 used sparingly since there are a wide range of errors that can arrise from relying to heavily on
 web scraping
 """
-import time, re
+import time, re, logging
 
 import selenium, config, bs4, requests
 from selenium import webdriver
@@ -51,8 +51,6 @@ def get_stock_list(page_number):
   return stock_list
 
 
-
-#TODO: replace print statements with logging
 def main():
   config.WebscrapeOutput.clear
   stocks = []
@@ -63,10 +61,10 @@ def main():
         config.WebscrapeOutput.append(indivstock)
         stocks.append(indivstock)
         file.writelines(indivstock + '\n')
-    print(len(stocks)) #prints lengths of the list to ensure data is being added properly
+    logging.info(len(stocks)) #prints lengths of the list to ensure data is being added properly
     #for symbol in stock_list:
       #print(symbol)
-  print(len(config.WebscrapeOutput))
+  logging.info(len(config.WebscrapeOutput))
   file.close()
   return stocks
 
