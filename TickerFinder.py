@@ -3,10 +3,10 @@
 
 #NOTE: Polygon API calls only return data for stocks listed on US stock exchanges.
 
-import requests, config, TimeConversion, datetime
+import requests, config, TimeConversion, datetime, logging
 
 def isValidTicker(ticker):
-    date = "2023-04-02"
+    date = "2023-06-28"
     PreMarketTimes = TimeConversion.DateToMilliseconds(date)
 
     URL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
@@ -20,8 +20,8 @@ def isValidTicker(ticker):
     try:
         close = closeResponseJSON['close']
     except:
+        logging.info("an error occured trying to find the close price")
         return
-        print("an error occured trying to find the open price")
     #API call that returns all premarket data in the form of one minute candles for a certain ticker
     response = requests.get('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
                         '/' + str(PreMarketTimes[0])+ '/' + str(PreMarketTimes[1]) +'?adjusted=true&sort=asc&limit=5000&apiKey=' + config.API_KEY) 
@@ -31,12 +31,12 @@ def isValidTicker(ticker):
         if data['resultsCount'] <= 0: #'resultsCount' corresponds to the number of candles returned
             return
     except:
-        print("an error occured trying to get premarket candles")
+        logging.info("an error occured trying to get premarket candles")
     aggregates = data['results'] #the list of candles 
     try:
         threshold = ((close * 100 * 12) / 1000) #multiplies the open price by 1.2, prevents floating point errors
     except UnboundLocalError:
-        print("debug UnboundLocalError")
+        logging.info("UnboundLocalError occurred, issue finding close price")
         return
     for r in aggregates:
         if r['h'] > threshold:
