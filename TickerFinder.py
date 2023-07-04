@@ -5,8 +5,9 @@
 
 import requests, config, TimeConversion, datetime, logging
 
-def isValidTicker(ticker):
-    date = "2023-06-28"
+logging.basicConfig(level=logging.WARNING)
+
+def isValidTicker(ticker, date):
     PreMarketTimes = TimeConversion.DateToMilliseconds(date)
 
     URL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
