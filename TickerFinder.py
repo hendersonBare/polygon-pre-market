@@ -3,17 +3,48 @@
 
 #NOTE: Polygon API calls only return data for stocks listed on US stock exchanges.
 
-import requests, config, TimeConversion, datetime, logging
+"""OPTIMIZE: The 2 approaches I could come up with for adding data to the database are as follows:
+1.) Go ahead and create a table for every single ticker and its values, if not a single datapoint is above the threshold
+then delete the table
+    Problems: overhead cost of creating a table paid for every single ticker
+    Have to add data to a database that will most likely not be used
+2.) If the threshold is met, create the table, add the ticker to the databse of tickers for that day,
+then reiterate over the results of the API call and add them to the databse
+    Problems: redundant iterations
+
+NOTE: for now, using #2
+"""
+
+import requests, config, TimeConversion, datetime, logging, pyodbc
 
 logging.basicConfig(level=logging.WARNING)
 
-def isValidTicker(ticker, date):
-    PreMarketTimes = TimeConversion.DateToMilliseconds(date)
+def isValidTicker(ticker, date, cursor):
+    createTickerTable(date, cursor)
+    close = getClosePrice(date, ticker)
+    if (close == -1): return
 
-    URL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + date + 
+    aggregates = getAggregates(date, ticker)
+
+    try:
+        threshold = ((close * 100 * 12) / 1000) #multiplies the previous close price by 1.2, prevents floating point errors
+    except UnboundLocalError:
+        logging.info("UnboundLocalError occurred, issue finding close price")
+        return
+    for r in aggregates:
+        if r['h'] > threshold:
+            print(ticker)
+            addTickerToDateTable(date, cursor, ticker)
+            return ticker
+        
+
+        
+def getClosePrice(date, ticker):
+    previousDay = TimeConversion.decreaseDayByOne(date)
+    openCloseURL = ('https://api.polygon.io/v1/open-close/' + ticker + '/' + previousDay + 
                                 '?adjusted=true&apiKey=' + config.API_KEY) #URL of the git API request
     
-    closeResponse = requests.get(URL)
+    closeResponse = requests.get(openCloseURL)
 
     closeResponseJSON = closeResponse.json()
     """TODO: Error handling. Possible error cases:
@@ -22,24 +53,40 @@ def isValidTicker(ticker, date):
         close = closeResponseJSON['close']
     except:
         logging.info("an error occured trying to find the close price")
-        return
+        return -1
+    return close
+
+
+
+def getAggregates(date, ticker):
+    PreMarketTimes = TimeConversion.DateToMilliseconds(date)
+
+    aggregatesURL = ('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
+                        '/' + str(PreMarketTimes[0])+ '/' + str(PreMarketTimes[1]) +'?adjusted=true&sort=asc&limit=5000&apiKey=' + config.API_KEY)
     #API call that returns all premarket data in the form of one minute candles for a certain ticker
-    response = requests.get('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
-                        '/' + str(PreMarketTimes[0])+ '/' + str(PreMarketTimes[1]) +'?adjusted=true&sort=asc&limit=5000&apiKey=' + config.API_KEY) 
+    response = requests.get(aggregatesURL) 
+
     data = response.json()
     #TODO: need error handling for when the ticker yeilds no data or response
     try:
         if data['resultsCount'] <= 0: #'resultsCount' corresponds to the number of candles returned
-            return
+            return [] #returns empty list
     except:
         logging.info("an error occured trying to get premarket candles")
-    aggregates = data['results'] #the list of candles 
-    try:
-        threshold = ((close * 100 * 12) / 1000) #multiplies the open price by 1.2, prevents floating point errors
-    except UnboundLocalError:
-        logging.info("UnboundLocalError occurred, issue finding close price")
-        return
-    for r in aggregates:
-        if r['h'] > threshold:
-            print(ticker)
-            return ticker
+    return data['results'] #the list of candles 
+
+def createTickerTable(date, cursor):
+    dateString = date.replace("-", "")
+    createTableCommand = ("IF OBJECT_ID(N'dbo.Table_" + dateString + "', N'U') IS NULL" + 
+                          '\n' + "BEGIN" + '\n' + '\u0009' + 'CREATE TABLE Table_' + dateString + '(' + '\n'
+                          + '\u0009' + 'TickerName varchar(50));' + '\n' + 'END'
+                          )
+    cursor.execute(createTableCommand)
+    cursor.commit()
+
+def addTickerToDateTable(date, cursor, ticker):
+    dateString = date.replace("-", "")
+    addTickerCommand = ("INSERT INTO Table_" + dateString + " (TickerName)" + '\n' +
+                     "VALUES (" + ticker + ");")
+    cursor.execute(addTickerCommand)
+    cursor.commit()
