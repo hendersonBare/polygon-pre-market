@@ -1,4 +1,9 @@
-import TickerFinder, config, datetime
+import TickerFinder, config, datetime, pyodbc
+
+connection_string = 'DRIVER={SQL Server};SERVER=' + config.server + ';DATABASE=' + config.database + ';Trusted_Connection=yes;'
+
+connection = pyodbc.connect(connection_string)
+
 file = open('NASDAQ_screener_tickers.txt', "r")
 
 lines = file.readlines()
