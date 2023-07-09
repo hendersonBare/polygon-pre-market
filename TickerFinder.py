@@ -35,8 +35,8 @@ def isValidTicker(ticker, date, cursor):
         if r['h'] > threshold:
             print(ticker)
             addTickerToDateTable(date, cursor, ticker)
+            createTickerAggregateTable(date, cursor, ticker, aggregates)
             return ticker
-        
 
         
 def getClosePrice(date, ticker):
@@ -78,8 +78,8 @@ def getAggregates(date, ticker):
 def createTickerTable(date, cursor):
     dateString = date.replace("-", "")
     createTableCommand = ("IF OBJECT_ID(N'dbo.Table_" + dateString + "', N'U') IS NULL" + 
-                          '\n' + "BEGIN" + '\n' + '\u0009' + 'CREATE TABLE Table_' + dateString + '(' + '\n'
-                          + '\u0009' + 'TickerName varchar(50));' + '\n' + 'END'
+                          '\n' + "BEGIN" + '\n' + '\t' + 'CREATE TABLE Table_' + dateString + '(' + '\n'
+                          + '\t' + 'TickerName varchar(50));' + '\n' + 'END'
                           )
     cursor.execute(createTableCommand)
     cursor.commit()
@@ -87,6 +87,31 @@ def createTickerTable(date, cursor):
 def addTickerToDateTable(date, cursor, ticker):
     dateString = date.replace("-", "")
     addTickerCommand = ("INSERT INTO Table_" + dateString + " (TickerName)" + '\n' +
-                     "VALUES (" + ticker + ");")
+                     "VALUES ('" + ticker + "');")
     cursor.execute(addTickerCommand)
     cursor.commit()
+
+def createTickerAggregateTable(date, cursor, ticker, aggregates):
+    dateString = date.replace("-", "")
+    createTableCommand = ("IF OBJECT_ID(N'dbo.Table_" + ticker + "_" + dateString +"', N'U') IS NULL" + 
+                          '\n' + "BEGIN" + '\n' + '\t' + 'CREATE TABLE Table_' + ticker +"_"+ dateString + '(' + 
+                          '[open] FLOAT,'  + '\n' + 
+                          '\t' + '[close] FLOAT,' + '\n' +
+                          '\t' + '[high] FLOAT,' + '\n' +
+                          '\t' + '[low] FLOAT,' + '\n' +
+                          '\t' + '[volumeWeighted] FLOAT,' + '\n' +
+                          '\t' + '[numberOfTransactions] int,' + '\n' +
+                          '\t' + '[timestamp] int' +
+                          ');' + '\n' + 'END'
+                          )
+    cursor.execute(createTableCommand)
+    cursor.commit()
+    insertDataCommand = ""
+    for result in aggregates:
+        insertDataCommand = ("INSERT INTO Table_" + ticker +"_"+ dateString + 
+                             " ([open], [close], [high], [low], [volumeWeighted], [NumberOfTransactions], [timestamp]) \n" 
+                             + "( {}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
+                                                                       result['vw'], result['n'], result['t']) )
+        cursor.execute(insertDataCommand)
+        cursor.commit()
+    return
