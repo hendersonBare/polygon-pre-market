@@ -25,5 +25,5 @@ for x in range(0, 3):
     for y in range(0, len(NASDAQ_Tickers)):
         TickerFinder.isValidTicker(NASDAQ_Tickers[y], dateString, cursor)
 
-connection.close()
 cursor.close()
+connection.close()
