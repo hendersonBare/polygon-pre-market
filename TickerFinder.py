@@ -100,8 +100,8 @@ def createTickerAggregateTable(date, cursor, ticker, aggregates):
                           '\t' + '[high] FLOAT,' + '\n' +
                           '\t' + '[low] FLOAT,' + '\n' +
                           '\t' + '[volumeWeighted] FLOAT,' + '\n' +
-                          '\t' + '[numberOfTransactions] int,' + '\n' +
-                          '\t' + '[timestamp] int' +
+                          '\t' + '[numberOfTransactions] bigint,' + '\n' +
+                          '\t' + '[timestamp] bigint' +
                           ');' + '\n' + 'END'
                           )
     cursor.execute(createTableCommand)
@@ -110,7 +110,7 @@ def createTickerAggregateTable(date, cursor, ticker, aggregates):
     for result in aggregates:
         insertDataCommand = ("INSERT INTO Table_" + ticker +"_"+ dateString + 
                              " ([open], [close], [high], [low], [volumeWeighted], [NumberOfTransactions], [timestamp]) \n" 
-                             + "( {}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
+                             + "VALUES ({}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
                                                                        result['vw'], result['n'], result['t']) )
         cursor.execute(insertDataCommand)
         cursor.commit()
