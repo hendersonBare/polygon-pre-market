@@ -20,7 +20,7 @@
             function createElements(item){
                 newlink = document.createElement('a');
                 newlink.innerHTML = item;
-                newlink.href = 'http://127.0.0.1:8000/table/{{dateValue}}' + item;
+                newlink.href = 'http://127.0.0.1:8000/table/table_' + item + '_{{dateValue}}';
                 document.body.appendChild(newlink);
                 document.body.appendChild(document.createElement('p'));
                 //{innerHTML: item, href: 'http://127.0.0.1:8000/table/' + dateValue + item}

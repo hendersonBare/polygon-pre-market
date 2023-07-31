@@ -9,7 +9,7 @@ cursor = connection.cursor()
 
 def requestDate(dateValue):
     connection = pyodbc.connect(connection_string)
-    cursor = connection.cursor()
+    cursor = connection.cursor() ##why is this here, redundant
 
     dateValue = dateValue.replace("-", "")
     dateTableRequest = "SELECT TickerName FROM Table_" + dateValue
@@ -23,3 +23,20 @@ def requestDate(dateValue):
     connection.close()
 
     return returnValue
+
+def requestTable(tableName):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor() ##why is this here, redundant
+
+    tableName = tableName.replace("-", "")
+    tableDataRequest = 'SELECT [open], [close], [high], [low], [volumeWeighted], [numberOfTransactions], [timestamp] FROM ' + tableName
+    cursor.execute(tableDataRequest)
+    data = cursor.fetchall()
+    listOfLists = []
+    for cursorDescription in data:  
+        newList = []
+        for item in cursorDescription:
+            newList.append(item)
+        listOfLists.append(newList)
+
+    return listOfLists
