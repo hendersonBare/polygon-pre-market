@@ -15,9 +15,13 @@ then reiterate over the results of the API call and add them to the databse
 NOTE: for now, using #2
 """
 
-import requests, config, TimeConversion, datetime, logging, pyodbc
+import requests, config, TimeConversion, datetime, logging, pyodbc, getRSITest
 
 logging.basicConfig(level=logging.WARNING)
+
+class InsufficientData(Exception):
+    def __init__(self, message):
+        self.message = message
 
 def isValidTicker(ticker, date, cursor):
     createTickerTable(date, cursor)
@@ -25,6 +29,10 @@ def isValidTicker(ticker, date, cursor):
     if (close == -1): return
 
     aggregates = getAggregates(date, ticker)
+    try:
+        RSI = getRSI(date, ticker)
+    except InsufficientData:
+        return
 
     try:
         threshold = ((close * 100 * 12) / 1000) #multiplies the previous close price by 1.2, prevents floating point errors
@@ -75,6 +83,28 @@ def getAggregates(date, ticker):
         logging.info("an error occured trying to get premarket candles")
     return data['results'] #the list of candles 
 
+def getRSI(date, ticker):
+    timeWindow = TimeConversion.DateToMilliseconds(date)
+
+    RSI_URL = ('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
+                        '/' + str(timeWindow[2])+ '/' + str(timeWindow[3]) +'?adjusted=true&sort=desc&limit=15&apiKey=' + config.API_KEY)
+    response = requests.get(RSI_URL)
+    data = response.json()
+    if data['resultsCount'] < 15:
+        raise InsufficientData('Insufficient amount of data')
+    return data['results']
+
+def getMACD(date, ticker):
+    timeWindow = TimeConversion.DateToMilliseconds(date)
+
+    MACD_URL = ('https://api.polygon.io/v2/aggs/ticker/' + ticker + '/range/1/minute' +
+                        '/' + str(timeWindow[2])+ '/' + str(timeWindow[3]) +'?adjusted=true&sort=desc&limit=27&apiKey=' + config.API_KEY)
+    response = requests.get(MACD_URL)
+    data = response.json()
+    if data['resultsCount'] < 27:
+        raise InsufficientData('Insufficient amount of data')
+    return data['results']
+
 def createTickerTable(date, cursor):
     dateString = date.replace("-", "")
     createTableCommand = ("IF OBJECT_ID(N'dbo.Table_" + dateString + "', N'U') IS NULL" + 
@@ -99,19 +129,23 @@ def createTickerAggregateTable(date, cursor, ticker, aggregates):
                           '\t' + '[close] FLOAT,' + '\n' +
                           '\t' + '[high] FLOAT,' + '\n' +
                           '\t' + '[low] FLOAT,' + '\n' +
-                          '\t' + '[volumeWeighted] FLOAT,' + '\n' +
+                          '\t' + '[volume] FLOAT,' + '\n' +
                           '\t' + '[numberOfTransactions] bigint,' + '\n' +
-                          '\t' + '[timestamp] bigint' +
+                          '\t' + '[timestamp] bigint,' +
+                          '\t' + '[rsi] FLOAT' +
                           ');' + '\n' + 'END'
                           )
     cursor.execute(createTableCommand)
     cursor.commit()
     insertDataCommand = ""
+    RSI = getRSITest.CalculateRSI(date, ticker, aggregates)
+    i = 0
     for result in aggregates:
         insertDataCommand = ("INSERT INTO Table_" + ticker +"_"+ dateString + 
-                             " ([open], [close], [high], [low], [volumeWeighted], [NumberOfTransactions], [timestamp]) \n" 
-                             + "VALUES ({}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
-                                                                       result['vw'], result['n'], result['t']) )
+                             " ([open], [close], [high], [low], [volume], [NumberOfTransactions], [timestamp], [rsi]) \n" 
+                             + "VALUES ({}, {}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
+                                                                       result['v'], result['n'], result['t'], RSI[i]) )
+        i += 1
         cursor.execute(insertDataCommand)
         cursor.commit()
     return

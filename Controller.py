@@ -1,6 +1,4 @@
 import DatabaseRequests
-data = DatabaseRequests.requestTable('table_AVTX_2023-06-27')
-
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse

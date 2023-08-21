@@ -31,12 +31,12 @@ Options.add_argument('--disable-dev-shm-usage')
 Options.add_argument('--no-sandbox')
 driver = webdriver.Firefox(options=Options)
 
-file_path = 'NASDAQ_screener_tickers.txt'
+file_path = 'NYSE_screener_tickers.txt'
 
-file = open(file_path, "w")
+#file = open(file_path, "w")
 
 def get_stock_list(page_number):
-  url = "https://finviz.com/screener.ashx?v=111&f=exch_nasd&r=%s" % page_number #page_number used to iterate through pages
+  url = "https://finviz.com/screener.ashx?v=111&f=exch_nyse&r=%s" % page_number #page_number used to iterate through pages
   driver.get(url)
   response = driver.page_source
   soup = BeautifulSoup(response, "html.parser")
@@ -86,7 +86,18 @@ def split_comment_into_tickers(comment):
       continue
   return tickers
 
-main()
+def removeDuplicates():
+  lines_seen = set() # holds lines already seen
+  outfile = open('allTickersNoDuplicates.txt', "w")
+  for line in open('all_tickers.txt', "r"):
+      if line not in lines_seen: # not a duplicate
+          outfile.write(line)
+          lines_seen.add(line)
+  outfile.close()
+
+#main()
+
+removeDuplicates()
 
 
 """HTML comment example (whitespace included):
