@@ -53,7 +53,7 @@ def CalculateRSI(date, ticker, resultArray):
             losses[i] = abs(percentChange) #less than zero is a loss (zero gets added anyways)
         avgPercentageGain = (gains[0] + gains[1] + gains[2] + gains[3] + gains[4] + gains[5] + gains[6] + gains[7] + gains[8] + gains[9] + gains[10] + gains[11] + gains[12] + gains[13]) / 14
         avgPercentageLoss = (losses[0] + losses[1] + losses[2] + losses[3] + losses[4] + losses[5] + losses[6] + losses[7] + losses[8] + losses[9] + losses[10] + losses[11] + losses[12] + losses[13]) / 14
-        if (avgPercentageGain == 0 | avgPercentageLoss == 0):
+        if (avgPercentageGain == 0) or (avgPercentageLoss == 0):
             relativeStrength = 0
         else:
             relativeStrength = avgPercentageGain / avgPercentageLoss

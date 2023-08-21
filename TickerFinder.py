@@ -15,7 +15,7 @@ then reiterate over the results of the API call and add them to the databse
 NOTE: for now, using #2
 """
 
-import requests, config, TimeConversion, datetime, logging, pyodbc, getRSITest
+import requests, config, TimeConversion, logging, getRSITest, MACDCalculator
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -132,19 +132,25 @@ def createTickerAggregateTable(date, cursor, ticker, aggregates):
                           '\t' + '[volume] FLOAT,' + '\n' +
                           '\t' + '[numberOfTransactions] bigint,' + '\n' +
                           '\t' + '[timestamp] bigint,' +
-                          '\t' + '[rsi] FLOAT' +
+                          '\t' + '[rsi] FLOAT,' +
+                          '\t' + '[macd] FLOAT' +
                           ');' + '\n' + 'END'
                           )
     cursor.execute(createTableCommand)
     cursor.commit()
     insertDataCommand = ""
     RSI = getRSITest.CalculateRSI(date, ticker, aggregates)
+    try:
+        MACDresults = MACDCalculator.buildMACD(date, ticker, aggregates)
+    except:
+        return
+    MACD = MACDresults
     i = 0
     for result in aggregates:
         insertDataCommand = ("INSERT INTO Table_" + ticker +"_"+ dateString + 
-                             " ([open], [close], [high], [low], [volume], [NumberOfTransactions], [timestamp], [rsi]) \n" 
-                             + "VALUES ({}, {}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
-                                                                       result['v'], result['n'], result['t'], RSI[i]) )
+                             " ([open], [close], [high], [low], [volume], [NumberOfTransactions], [timestamp], [rsi], [macd]) \n" 
+                             + "VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {} )".format(result['o'], result['c'], result['h'], result['l'],
+                                                                       result['v'], result['n'], result['t'], RSI[i], MACD[i]) )
         i += 1
         cursor.execute(insertDataCommand)
         cursor.commit()
